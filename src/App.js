@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import './App.css';
 import Home from './Home';
@@ -21,8 +21,69 @@ import DetailForumPage from "./DetailForum";
 import EducationCommunityPage from "./EducationCommunity";
 import EducationRisetPage from "./EducationRiset";
 
+// =========================================================
+// CUSTOM HOOK: LOGOUT OTOMATIS GLOBAL (TANPA REDIRECT)
+// =========================================================
+const useAutoLogout = () => {
+  const TIMEOUT_IN_HOURS = 1;
+  const TIMEOUT_IN_MS = TIMEOUT_IN_HOURS * 60 * 60 * 1000; // 1 jam dalam milidetik
+
+  const updateLastActivity = () => {
+    localStorage.setItem('lastActivity', Date.now().toString());
+  };
+
+  const handleLogout = () => {
+    if (localStorage.getItem('token')) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('lastActivity');
+
+      alert("Sesi Anda telah berakhir. Anda telah keluar dari akun secara otomatis.");
+      window.location.reload(); // Refresh halaman agar state Navbar & UI sinkron terhapus
+    }
+  };
+
+  useEffect(() => {
+    // Jalankan fitur pelacakan HANYA jika pengguna sudah login
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    // Set waktu awal saat aplikasi pertama kali dimuat
+    updateLastActivity();
+
+    // Daftarkan event listener untuk mendeteksi interaksi pengguna secara global
+    const activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];
+    activityEvents.forEach((event) => {
+      window.addEventListener(event, updateLastActivity);
+    });
+
+    // Jalankan pengecekan berkala (setiap 30 detik)
+    const interval = setInterval(() => {
+      const lastActivity = localStorage.getItem('lastActivity');
+
+      if (lastActivity) {
+        const timeElapsed = Date.now() - parseInt(lastActivity, 10);
+
+        // Jika waktu tidak aktif melebihi batas, lakukan logout
+        if (timeElapsed > TIMEOUT_IN_MS) {
+          handleLogout();
+        }
+      }
+    }, 30000);
+
+    // Pembersihan event listener & interval saat aplikasi di-unmount
+    return () => {
+      activityEvents.forEach((event) => {
+        window.removeEventListener(event, updateLastActivity);
+      });
+      clearInterval(interval);
+    };
+  }, []);
+};
 
 function App() {
+  // Panggil hook auto-logout secara global di sini
+  useAutoLogout();
+
   return (
     <Router>
       <Routes>
