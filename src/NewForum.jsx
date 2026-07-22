@@ -28,8 +28,8 @@ const NewForumPage = ({ onSuccess }) => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          title,
-          content,
+          title : title,
+          content : content,
         }),
       });
 
@@ -44,8 +44,8 @@ const NewForumPage = ({ onSuccess }) => {
 
       if (onSuccess) onSuccess();
     } catch (err) {
-      alert("Gagal menambahkan diskusi");
-      console.error("Error:", err);
+      alert(err.message || "Gagal menambahkan diskusi");
+      console.error("Error mengirim pesan:", err);
     } finally {
       setLoading(false);
     }
