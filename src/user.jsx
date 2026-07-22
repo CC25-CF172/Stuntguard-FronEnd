@@ -62,7 +62,7 @@ export default function ChildGrowthDashboard() {
         setLoading(false);
 
         if (user.id) {
-          fetch(`${API_BASE_URL}/api/v1/stunting/history/${user.id}`, {
+          fetch(`${API_BASE_URL}/api/v1/stunting/history`, {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
