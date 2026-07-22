@@ -65,6 +65,9 @@ const ForumPage = () => {
       const data = await res.json();
       if (data.success) {
         setReplies(data.data || []);
+      
+      } else if (data.message === "Belum ada Komentar") {
+        setReplies([]); // Set ke array kosong jika belum ada komentar
       } else {
         console.error("Gagal ambil komentar:", data.message);
         setReplies([]); // Set ke array kosong jika gagal
