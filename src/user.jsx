@@ -3,7 +3,7 @@ import Navbar from './pages/components/Navbar';
 import Footer from './pages/components/Footer';
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "./api";
-// Tambahkan import untuk chart
+// Import Chart.js
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -31,7 +31,7 @@ export default function ChildGrowthDashboard() {
   // Ref untuk chart export
   const chartRef = useRef();
 
-  // Scroll ke atas saat halaman di-refresh/mount
+  // Scroll ke atas saat mount
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, []);
@@ -44,6 +44,7 @@ export default function ChildGrowthDashboard() {
       return;
     }
 
+    // 1. Fetch Profil User
     fetch(`${API_BASE_URL}/api/v1/profile`, {
       method: "GET",
       headers: {
@@ -51,8 +52,8 @@ export default function ChildGrowthDashboard() {
         "Authorization": `Bearer ${token}`,
       },
     })
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         const user = data.data ? data.data : data;
         setProfile({
           name: user.name || "",
@@ -61,24 +62,31 @@ export default function ChildGrowthDashboard() {
         });
         setLoading(false);
 
+        // 2. Fetch Riwayat Stunting Menggunakan Path Param /stunting/history/{user_id}
         if (user.id) {
-          fetch(`${API_BASE_URL}/api/v1/stunting/history`, {
+          fetch(`${API_BASE_URL}/api/v1/stunting/history/${user.id}`, {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
               "Authorization": `Bearer ${token}`,
             },
           })
-            .then(res => res.json())
-            .then(result => {
+            .then((res) => res.json())
+            .then((result) => {
               if (result.success && Array.isArray(result.data)) {
                 setHistory(result.data);
                 if (result.data.length > 0) {
-                  const sorted = [...result.data].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                  const sorted = [...result.data].sort(
+                    (a, b) => new Date(b.created_at) - new Date(a.created_at)
+                  );
                   setStats({
                     total: result.data.length,
-                    lastDate: new Date(sorted[0].created_at).toLocaleDateString("id-ID", { year: "numeric", month: "short", day: "numeric" }),
-                    currentStatus: sorted[0].risk_type || "-",
+                    lastDate: new Date(sorted[0].created_at).toLocaleDateString("id-ID", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    }),
+                    currentStatus: sorted[0].risk_type || sorted[0].who_classification || "-",
                   });
                 } else {
                   setStats({ total: 0, lastDate: "-", currentStatus: "-" });
@@ -87,10 +95,16 @@ export default function ChildGrowthDashboard() {
                 setHistory([]);
                 setStats({ total: 0, lastDate: "-", currentStatus: "-" });
               }
+            })
+            .catch((err) => {
+              console.error("Gagal mengambil riwayat:", err);
+              setHistory([]);
+              setStats({ total: 0, lastDate: "-", currentStatus: "-" });
             });
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("Gagal mengambil profil:", err);
         setProfile({ name: "Pengguna", email: "-", id: null });
         setLoading(false);
       });
@@ -106,27 +120,39 @@ export default function ChildGrowthDashboard() {
     return <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">{status}</span>;
   };
 
-  // Sort history sekali saja untuk chart
+  // Sort history berdasarkan usia untuk kelancaran garis chart
   const sortedHistory = [...history].sort((a, b) => a.age_months - b.age_months);
 
-  // Pisahkan history berdasarkan gender
+  // Helper untuk membaca nilai tinggi badan dari berbagai key API
+  const getHeightValue = (item) => item.current_length_cm || item.height_cm || item.height || 0;
+
+  // Filter Gender secara fleksibel (male/female, Laki-laki/Perempuan)
   const maleHistory = sortedHistory.filter(
-    item => (item.gender === "Laki-laki" || item.gender === "M") && item.current_length_cm && item.current_length_cm > 0
-  );
-  const femaleHistory = sortedHistory.filter(
-    item => (item.gender === "Perempuan" || item.gender === "F") && item.current_length_cm && item.current_length_cm > 0
+    (item) =>
+      (item.gender?.toLowerCase() === "male" ||
+        item.gender?.toLowerCase() === "laki-laki" ||
+        item.gender === "M") &&
+      getHeightValue(item) > 0
   );
 
-  // Gabungkan semua usia unik untuk label sumbu X
+  const femaleHistory = sortedHistory.filter(
+    (item) =>
+      (item.gender?.toLowerCase() === "female" ||
+        item.gender?.toLowerCase() === "perempuan" ||
+        item.gender === "F") &&
+      getHeightValue(item) > 0
+  );
+
+  // Gabungkan semua usia unik untuk sumbu X (Label Usia)
   const allAges = Array.from(
-    new Set([...maleHistory, ...femaleHistory].map(item => item.age_months))
+    new Set([...maleHistory, ...femaleHistory].map((item) => item.age_months))
   ).sort((a, b) => a - b);
 
-  // Fungsi untuk mapping tinggi badan berdasarkan usia
+  // Helper mapping nilai data tinggi badan
   const getDataByAge = (historyArr, ages) =>
-    ages.map(age => {
-      const found = historyArr.find(item => item.age_months === age);
-      return found ? found.current_length_cm : null;
+    ages.map((age) => {
+      const found = historyArr.find((item) => item.age_months === age);
+      return found ? getHeightValue(found) : null;
     });
 
   const datasets = [];
@@ -166,12 +192,13 @@ export default function ChildGrowthDashboard() {
   }
 
   const chartData = {
-    labels: allAges.map(age => `${age} bln`),
+    labels: allAges.map((age) => `${age} bln`),
     datasets,
   };
 
   const chartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: { display: false },
       tooltip: { mode: "index", intersect: false },
@@ -182,18 +209,13 @@ export default function ChildGrowthDashboard() {
     },
   };
 
-  // Fungsi download chart as image
+  // Fungsi download chart
   const handleDownloadChart = () => {
-    // Chart.js v4: gunakan chartRef.current.canvas
-    // chartRef.current adalah instance Chart.js dari react-chartjs-2 v4+
-    // chartRef.current.canvas = canvas element
     try {
       const chartInstance = chartRef.current;
       if (!chartInstance) return;
-      // Untuk react-chartjs-2 v4, gunakan chartRef.current.canvas
       const url = chartInstance.canvas.toDataURL("image/png", 1.0);
 
-      // Buat link download
       const link = document.createElement("a");
       link.href = url;
       link.download = "grafik-pertumbuhan-anak.png";
@@ -208,9 +230,9 @@ export default function ChildGrowthDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center bg-blue-50 p-4 rounded-xl mb-6">
+      <div className="max-w-6xl mx-auto p-4 sm:p-6">
+        {/* Header Profil */}
+        <div className="flex justify-between items-center bg-blue-50 p-4 rounded-xl mb-6 shadow-sm">
           <div className="flex items-center space-x-4">
             <div className="bg-blue-500 text-white rounded-full w-10 h-10 flex items-center justify-center">
               <span className="text-lg font-bold">👤</span>
@@ -225,23 +247,24 @@ export default function ChildGrowthDashboard() {
             </div>
           </div>
           <button
-            className="border border-blue-400 text-blue-500 px-4 py-1 rounded-md hover:bg-blue-100 text-sm"
-            onClick={() => navigate("/editprofile")}>
+            className="border border-blue-400 text-blue-500 px-4 py-1.5 rounded-md hover:bg-blue-100 text-sm font-medium transition"
+            onClick={() => navigate("/editprofile")}
+          >
             Edit Profil
           </button>
         </div>
 
-        {/* Main Content */}
+        {/* Grid Konten Utama */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Growth Chart */}
-          <div className="lg:col-span-2 bg-white p-4 rounded-xl shadow">
+          {/* Grafik Pertumbuhan */}
+          <div className="lg:col-span-2 bg-white p-5 rounded-xl shadow">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="font-semibold text-lg">Grafik Pertumbuhan Anak</h2>
+              <h2 className="font-semibold text-lg text-gray-800">
+                Grafik Pertumbuhan Anak
+              </h2>
             </div>
             <div className="flex flex-col sm:flex-row items-start gap-4">
-              <div
-                className="bg-gray-100 h-64 flex flex-col items-center justify-center rounded-md text-sm text-gray-500 flex-1 max-w-full sm:max-w-none"
-              >
+              <div className="bg-gray-50 h-72 w-full p-2 flex flex-col items-center justify-center rounded-lg border text-sm text-gray-500 flex-1">
                 {history.length === 0 ? (
                   <span>Belum ada data pertumbuhan.</span>
                 ) : (
@@ -252,38 +275,38 @@ export default function ChildGrowthDashboard() {
                   />
                 )}
               </div>
-              <div className="flex flex-col gap-2 mt-4 sm:mt-0 order-1 sm:order-none">
+              <div className="flex flex-col gap-2 mt-2 sm:mt-0">
                 <div className="flex items-center gap-2">
-                  <span className="inline-block w-4 h-4 rounded-full" style={{ background: "#2563eb" }}></span>
-                  <span className="text-xs text-gray-700">Laki-laki</span>
+                  <span className="inline-block w-3.5 h-3.5 rounded-full" style={{ background: "#2563eb" }}></span>
+                  <span className="text-xs text-gray-700 font-medium">Laki-laki</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="inline-block w-4 h-4 rounded-full" style={{ background: "#22c55e" }}></span>
-                  <span className="text-xs text-gray-700">Perempuan</span>
+                  <span className="inline-block w-3.5 h-3.5 rounded-full" style={{ background: "#22c55e" }}></span>
+                  <span className="text-xs text-gray-700 font-medium">Perempuan</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Stats & Actions */}
+          {/* Statistik Cepat & Tombol Aksi */}
           <div className="space-y-4">
-            <div className="bg-white p-4 rounded-xl shadow">
-              <h3 className="font-semibold mb-2">Statistik Cepat</h3>
-              <p className="text-sm py-1">Total Asesmen <span className="float-right font-medium">{stats.total}</span></p>
-              <p className="text-sm py-1">Asesmen Terakhir <span className="float-right font-medium">{stats.lastDate}</span></p>
-              <p className="text-sm py-1">Status Saat Ini <span className="float-right">{statusBadge(stats.currentStatus)}</span></p>
+            <div className="bg-white p-5 rounded-xl shadow">
+              <h3 className="font-semibold text-gray-800 mb-3 border-b pb-2">Statistik Cepat</h3>
+              <p className="text-sm py-1.5 text-gray-600">Total Asesmen <span className="float-right font-semibold text-gray-900">{stats.total}</span></p>
+              <p className="text-sm py-1.5 text-gray-600">Asesmen Terakhir <span className="float-right font-semibold text-gray-900">{stats.lastDate}</span></p>
+              <p className="text-sm py-1.5 text-gray-600">Status Saat Ini <span className="float-right">{statusBadge(stats.currentStatus)}</span></p>
             </div>
 
-            <div className="bg-white p-4 rounded-xl shadow space-y-2">
-              <h3 className="font-semibold mb-2">Aksi Cepat</h3>
+            <div className="bg-white p-5 rounded-xl shadow space-y-2.5">
+              <h3 className="font-semibold text-gray-800 mb-3 border-b pb-2">Aksi Cepat</h3>
               <button
-                className="bg-[#0284c7] hover:bg-blue-600 text-white w-full py-2 rounded-md text-sm font-medium"
+                className="bg-[#0284c7] hover:bg-blue-600 text-white w-full py-2.5 rounded-lg text-sm font-medium transition"
                 onClick={() => navigate("/prediction")}
               >
                 Asesmen Baru
               </button>
               <button
-                className="border border-blue-400 text-blue-500 w-full py-2 rounded-md text-sm"
+                className="border border-blue-400 text-blue-500 hover:bg-blue-50 w-full py-2.5 rounded-lg text-sm font-medium transition"
                 onClick={handleDownloadChart}
               >
                 Unduh Grafik Pertumbuhan
@@ -292,32 +315,40 @@ export default function ChildGrowthDashboard() {
           </div>
         </div>
 
-        {/* Assessment History */}
-        <div className="mt-6 bg-white p-4 rounded-xl shadow">
-          <h3 className="font-semibold text-lg mb-4">Riwayat Asesmen</h3>
+        {/* Tabel Riwayat Asesmen */}
+        <div className="mt-6 bg-white p-5 rounded-xl shadow overflow-x-auto">
+          <h3 className="font-semibold text-lg text-gray-800 mb-4">Riwayat Asesmen</h3>
           <table className="w-full text-sm text-left">
-            <thead className="text-gray-500 border-b">
+            <thead className="text-gray-500 bg-gray-50 border-b">
               <tr>
-                <th className="py-2">TANGGAL</th>
-                <th className="py-2">USIA (BULAN)</th>
-                <th className="py-2">GENDER</th>
-                <th className="py-2">STATUS</th>
+                <th className="py-3 px-3">TANGGAL</th>
+                <th className="py-3 px-3">USIA (BULAN)</th>
+                <th className="py-3 px-3">GENDER</th>
+                <th className="py-3 px-3">STATUS</th>
               </tr>
             </thead>
             <tbody>
               {history.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="text-center py-4 text-gray-400">Belum ada data asesmen.</td>
+                  <td colSpan={4} className="text-center py-6 text-gray-400">
+                    Belum ada data asesmen.
+                  </td>
                 </tr>
               ) : (
-                history
+                [...history]
                   .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
                   .map((item, idx) => (
-                    <tr className="border-b" key={item.id || idx}>
-                      <td className="py-2">{new Date(item.created_at).toLocaleDateString("id-ID", { year: "numeric", month: "short", day: "numeric" })}</td>
-                      <td>{item.age_months}</td>
-                      <td>{item.gender || "-"}</td>
-                      <td>{statusBadge(item.risk_type)}</td>
+                    <tr className="border-b hover:bg-gray-50" key={item.id || idx}>
+                      <td className="py-3 px-3 font-medium">
+                        {new Date(item.created_at).toLocaleDateString("id-ID", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </td>
+                      <td className="py-3 px-3">{item.age_months} bln</td>
+                      <td className="py-3 px-3 capitalize">{item.gender || "-"}</td>
+                      <td className="py-3 px-3">{statusBadge(item.risk_type || item.who_classification)}</td>
                     </tr>
                   ))
               )}
