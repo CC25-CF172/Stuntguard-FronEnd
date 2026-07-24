@@ -17,7 +17,7 @@ export default function StuntWatchRegister() {
   const [googleLoaded, setGoogleLoaded] = useState(false);
   const navigate = useNavigate();
 
-  const GOOGLE_CLIENT_ID = "337753637617-pqp1mt9b1eu2sdsnok0pc45fosi3phqb.apps.googleusercontent.com";
+  const GOOGLE_CLIENT_ID = "723159788689-tf0n4kpqjcn0k87hh29ufdbjjps79dkt.apps.googleusercontent.com";
 
   useEffect(() => {
     // Load Google Sign-In script
