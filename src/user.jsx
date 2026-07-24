@@ -41,6 +41,16 @@ export default function User() {
       return;
     }
 
+    // Helper: cari nilai id dari object apapun, toleran terhadap variasi nama key
+    const extractId = (obj) => {
+      if (!obj || typeof obj !== "object") return null;
+      const keys = ["id", "user_id", "userId", "uid", "ID", "Id"];
+      for (const k of keys) {
+        if (obj[k] !== undefined && obj[k] !== null) return obj[k];
+      }
+      return null;
+    };
+
     // Helper Dekode JWT Token
     const getUserIdFromToken = (jwtToken) => {
       try {
@@ -55,7 +65,7 @@ export default function User() {
         );
         const decoded = JSON.parse(jsonPayload);
         console.log("Payload Decoded JWT Token:", decoded);
-        return decoded.id || decoded.user_id || decoded.sub;
+        return extractId(decoded) || decoded.sub || null;
       } catch (e) {
         console.error("Gagal decode token JWT:", e);
         return null;
@@ -81,11 +91,11 @@ export default function User() {
 
         if (resData) {
           if (resData.data) {
-            rawId = resData.data.id || resData.data.user_id;
+            rawId = extractId(resData.data);
             name = resData.data.name || name;
             email = resData.data.email || email;
           } else {
-            rawId = resData.id || resData.user_id;
+            rawId = extractId(resData);
             name = resData.name || name;
             email = resData.email || email;
           }
@@ -96,14 +106,17 @@ export default function User() {
           rawId = getUserIdFromToken(token);
         }
 
-        const userId = rawId ? Number(rawId) : null;
+        // PENTING: id user di backend ini berupa UUID (string), BUKAN integer.
+        // Jangan di-convert pakai Number(), karena Number(UUID) akan menghasilkan NaN
+        // dan bikin fetch history tidak pernah jalan.
+        const userId = rawId || null;
         console.log(">>> Final ID User yang digunakan:", userId);
 
         setProfile({ name, email, id: userId });
         setLoading(false);
 
         // 2. Fetch History jika ID ditemukan
-        if (userId && !isNaN(userId)) {
+        if (userId) {
           fetch(`${API_BASE_URL}/api/v1/stunting/history/${userId}`, {
             method: "GET",
             headers: {
@@ -147,6 +160,8 @@ export default function User() {
               }
             })
             .catch((err) => {
+              // Catatan: backend akan balikin 404 "No stunting history found for this user."
+              // kalau user belum pernah asesmen sama sekali. Ini normal, bukan error aplikasi.
               console.error("Error fetching stunting history:", err);
               setHistory([]);
               setStats({ total: 0, lastDate: "-", currentStatus: "-" });
