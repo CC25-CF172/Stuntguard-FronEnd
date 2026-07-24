@@ -3,6 +3,7 @@ import Navbar from "./pages/components/Navbar";
 import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
 import { API_BASE_URL } from "./api";
 import Footer from "./pages/components/Footer";
+import BottomNavbar from "./pages/components/BottomNavbar";
 
 const suggestions = [
   "Apa itu stunting?",

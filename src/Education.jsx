@@ -6,6 +6,7 @@ import { Calendar, Clock, Search } from 'lucide-react';
 import carosel1 from "./assets/carosel1.jpeg";
 import carosel2 from "./assets/stunting2.png";
 import carosel3 from "./assets/stunting3.jpeg";
+import BottomNavbar from "./pages/components/BottomNavbar";
 
 const EducationalResources = () => {
   // Scroll ke atas saat halaman di-refresh/mount

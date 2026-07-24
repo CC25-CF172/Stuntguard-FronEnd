@@ -4,6 +4,7 @@ import { API_BASE_URL } from "./api";
 import { FaTrashAlt, FaEdit, FaCommentDots, FaSearch } from "react-icons/fa";
 import Footer from "./pages/components/Footer";
 import { useNavigate } from "react-router-dom";
+import BottomNavbar from "./pages/components/BottomNavbar";
 
 const formatRelativeTime = (dateString) => {
   const now = new Date();

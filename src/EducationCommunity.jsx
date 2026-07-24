@@ -3,6 +3,7 @@ import Navbar from "./pages/components/Navbar";
 import Footer from "./pages/components/Footer";
 import { useEffect } from "react";
 import gambar1 from "./assets/stunting2.png";
+import BottomNavbar from "./pages/components/BottomNavbar";
 
 const EducationCommunity = () => {
   useEffect(() => {

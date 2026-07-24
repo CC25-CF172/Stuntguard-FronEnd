@@ -4,6 +4,7 @@ import Footer from './pages/components/Footer';
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "./api";
 import { Line } from "react-chartjs-2";
+import BottomNavbar from "./pages/components/BottomNavbar";
 import {
   Chart as ChartJS,
   LineElement,

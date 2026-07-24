@@ -3,6 +3,7 @@ import Navbar from "./pages/components/Navbar";
 import Footer from "./pages/components/Footer";
 import { API_BASE_URL } from "./api";
 import html2pdf from "html2pdf.js"; // Impor statis
+import BottomNavbar from "./pages/components/BottomNavbar";
 
 // Main Prediction Component
 const PredictionPage = () => {

@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import Navbar from "./pages/components/Navbar";
 import { API_BASE_URL } from "./api";
 import Footer from "./pages/components/Footer";
+import BottomNavbar from "./pages/components/BottomNavbar";
 
 const UpdateForumPage = () => {
   const { id } = useParams();
