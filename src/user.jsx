@@ -42,6 +42,24 @@ export default function User() {
       return;
     }
 
+    // Helper untuk dekode JWT Token sebagai cadangan jika ID tidak ada di profil API
+    const getUserIdFromToken = (jwtToken) => {
+      try {
+        const base64Url = jwtToken.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split('')
+            .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        );
+        const decoded = JSON.parse(jsonPayload);
+        return decoded.id || decoded.user_id || decoded.sub;
+      } catch (e) {
+        return null;
+      }
+    };
+
     // 1. Fetch Profil User
     fetch(`${API_BASE_URL}/api/v1/profile`, {
       method: "GET",
@@ -52,12 +70,19 @@ export default function User() {
     })
       .then((res) => res.json())
       .then((resData) => {
-        // Ambil objek user dari response API
-        const userObj = resData.data || resData;
-        const rawId = userObj.id || userObj.user_id;
+        console.log("Response Profil Lengkap:", resData);
+
+        // Ekstrak objek user dari berbagai variasi wrapper API
+        const userObj = resData.data?.user || resData.data || resData.user || resData;
         
-        // Konversi ID ke tipe number sesuai dokumentasi API
+        // Cari ID dari response profil, jika tidak ada fallback dekode dari JWT token
+        let rawId = userObj.id || userObj.user_id || userObj.userId;
+        if (!rawId) {
+          rawId = getUserIdFromToken(token);
+        }
+
         const userId = rawId ? Number(rawId) : null;
+        console.log("User ID Hasil Ekstraksi:", userId);
 
         setProfile({
           name: userObj.name || "Pengguna",
@@ -66,7 +91,7 @@ export default function User() {
         });
         setLoading(false);
 
-        // 2. Fetch Riwayat Stunting jika userId berupa Number yang valid
+        // 2. Panggil API History jika userId berupa number valid
         if (userId && !isNaN(userId)) {
           fetch(`${API_BASE_URL}/api/v1/stunting/history/${userId}`, {
             method: "GET",
@@ -77,35 +102,34 @@ export default function User() {
           })
             .then(async (res) => {
               const result = await res.json();
-              if (!res.ok) {
-                console.error("Gagal mengambil riwayat stunting:", result);
-                throw new Error(result.message || "Bad Request");
-              }
+              console.log("Response Stunting History:", result);
+              if (!res.ok) throw new Error(result.message || "Gagal mengambil history");
               return result;
             })
             .then((result) => {
-              if (result.success && Array.isArray(result.data)) {
-                setHistory(result.data);
+              const historyData = Array.isArray(result.data)
+                ? result.data
+                : Array.isArray(result)
+                ? result
+                : [];
 
-                if (result.data.length > 0) {
-                  // Urutkan berdasarkan tanggal terbaru
-                  const sorted = [...result.data].sort(
-                    (a, b) => new Date(b.created_at) - new Date(a.created_at)
-                  );
-                  const lastItem = sorted[0];
+              if (historyData.length > 0) {
+                setHistory(historyData);
 
-                  setStats({
-                    total: result.data.length,
-                    lastDate: new Date(lastItem.created_at).toLocaleDateString("id-ID", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    }),
-                    currentStatus: lastItem.risk_type || lastItem.who_classification || "-",
-                  });
-                } else {
-                  setStats({ total: 0, lastDate: "-", currentStatus: "-" });
-                }
+                const sorted = [...historyData].sort(
+                  (a, b) => new Date(b.created_at) - new Date(a.created_at)
+                );
+                const lastItem = sorted[0];
+
+                setStats({
+                  total: historyData.length,
+                  lastDate: new Date(lastItem.created_at).toLocaleDateString("id-ID", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  }),
+                  currentStatus: lastItem.risk_type || lastItem.who_classification || "-",
+                });
               } else {
                 setHistory([]);
                 setStats({ total: 0, lastDate: "-", currentStatus: "-" });
@@ -117,7 +141,7 @@ export default function User() {
               setStats({ total: 0, lastDate: "-", currentStatus: "-" });
             });
         } else {
-          console.warn("User ID tidak valid, pemanggilan /stunting/history dilewati.");
+          console.error("Gagal mendapatkan User ID dari Profil maupun JWT Token!");
         }
       })
       .catch((err) => {
@@ -207,7 +231,7 @@ export default function User() {
     });
   }
 
-  // Fallback jika gender tidak terinci
+  // Fallback jika data gender tidak terdefinisi khusus
   if (datasets.length === 0 && sortedHistory.length > 0) {
     datasets.push({
       label: "Tinggi Badan (cm)",
