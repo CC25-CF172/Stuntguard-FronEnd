@@ -10,6 +10,7 @@ import carosel2 from "./assets/carosel2.png";
 import carosel3 from "./assets/carosel3.png";
 import { useInView } from "react-intersection-observer";
 import CountUp from "react-countup";
+import BottomNavbar from "./pages/components/BottomNavbaar";
 
 const carouselData = [
   {
@@ -493,6 +494,8 @@ export default function App() {
       <UnderstandingStuntingAccordion ref={accordionRef} accordionData={accordionData} />
       <ReadyToMonitorSection />
       <Footer />
+
+      <BottomNavbar />
     </div>
   );
 }
