@@ -29,7 +29,6 @@ export default function User() {
 
   const chartRef = useRef();
 
-  // Scroll ke atas saat komponen dimuat
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, []);
@@ -42,10 +41,11 @@ export default function User() {
       return;
     }
 
-    // Helper untuk dekode JWT Token sebagai cadangan jika ID tidak ada di profil API
+    // Helper Dekode JWT Token
     const getUserIdFromToken = (jwtToken) => {
       try {
         const base64Url = jwtToken.split('.')[1];
+        if (!base64Url) return null;
         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
         const jsonPayload = decodeURIComponent(
           atob(base64)
@@ -54,8 +54,10 @@ export default function User() {
             .join('')
         );
         const decoded = JSON.parse(jsonPayload);
+        console.log("Payload Decoded JWT Token:", decoded);
         return decoded.id || decoded.user_id || decoded.sub;
       } catch (e) {
+        console.error("Gagal decode token JWT:", e);
         return null;
       }
     };
@@ -70,28 +72,37 @@ export default function User() {
     })
       .then((res) => res.json())
       .then((resData) => {
-        console.log("Response Profil Lengkap:", resData);
+        console.log(">>> Full Response Profil dari Backend:", resData);
 
-        // Ekstrak objek user dari berbagai variasi wrapper API
-        const userObj = resData.data?.user || resData.data || resData.user || resData;
-        
-        // Cari ID dari response profil, jika tidak ada fallback dekode dari JWT token
-        let rawId = userObj.id || userObj.user_id || userObj.userId;
+        // Cari ID di berbagai lapisan response JSON backend
+        let rawId = null;
+        let name = "Pengguna";
+        let email = "-";
+
+        if (resData) {
+          if (resData.data) {
+            rawId = resData.data.id || resData.data.user_id;
+            name = resData.data.name || name;
+            email = resData.data.email || email;
+          } else {
+            rawId = resData.id || resData.user_id;
+            name = resData.name || name;
+            email = resData.email || email;
+          }
+        }
+
+        // Cadangan: Ambil dari token JWT jika profil tidak membawa ID
         if (!rawId) {
           rawId = getUserIdFromToken(token);
         }
 
         const userId = rawId ? Number(rawId) : null;
-        console.log("User ID Hasil Ekstraksi:", userId);
+        console.log(">>> Final ID User yang digunakan:", userId);
 
-        setProfile({
-          name: userObj.name || "Pengguna",
-          email: userObj.email || "-",
-          id: userId,
-        });
+        setProfile({ name, email, id: userId });
         setLoading(false);
 
-        // 2. Panggil API History jika userId berupa number valid
+        // 2. Fetch History jika ID ditemukan
         if (userId && !isNaN(userId)) {
           fetch(`${API_BASE_URL}/api/v1/stunting/history/${userId}`, {
             method: "GET",
@@ -102,7 +113,7 @@ export default function User() {
           })
             .then(async (res) => {
               const result = await res.json();
-              console.log("Response Stunting History:", result);
+              console.log(">>> Response Stunting History:", result);
               if (!res.ok) throw new Error(result.message || "Gagal mengambil history");
               return result;
             })
@@ -136,7 +147,7 @@ export default function User() {
               }
             })
             .catch((err) => {
-              console.error("Error pada stunting history:", err);
+              console.error("Error fetching stunting history:", err);
               setHistory([]);
               setStats({ total: 0, lastDate: "-", currentStatus: "-" });
             });
@@ -151,7 +162,6 @@ export default function User() {
       });
   }, []);
 
-  // Badge Status untuk tabel & statistik
   const statusBadge = (status) => {
     if (!status) return <span className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-xs">-</span>;
     const s = String(status).toLowerCase();
@@ -162,14 +172,11 @@ export default function User() {
     return <span className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-xs font-medium">{status}</span>;
   };
 
-  // Helper membaca tinggi & usia sesuai skema JSON API
   const getHeightValue = (item) => item.current_length_cm || item.height_cm || item.height || 0;
   const getAgeValue = (item) => item.age_months ?? item.age ?? 0;
 
-  // Urutkan riwayat dari usia terkecil ke terbesar untuk kurva grafik
   const sortedHistory = [...history].sort((a, b) => getAgeValue(a) - getAgeValue(b));
 
-  // Filter Gender Laki-laki & Perempuan
   const maleHistory = sortedHistory.filter(
     (item) =>
       (item.gender?.toLowerCase() === "male" ||
@@ -186,7 +193,6 @@ export default function User() {
       getHeightValue(item) > 0
   );
 
-  // Ambil semua usia unik untuk label sumbu X
   const allAges = Array.from(
     new Set(sortedHistory.map((item) => getAgeValue(item)))
   ).sort((a, b) => a - b);
@@ -231,7 +237,6 @@ export default function User() {
     });
   }
 
-  // Fallback jika data gender tidak terdefinisi khusus
   if (datasets.length === 0 && sortedHistory.length > 0) {
     datasets.push({
       label: "Tinggi Badan (cm)",
