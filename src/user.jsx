@@ -434,6 +434,8 @@ export default function User() {
       </div>
       <br />
       <Footer />
+
+      <BottomNavbar />
     </div>
   );
 }

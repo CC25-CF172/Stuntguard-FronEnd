@@ -192,6 +192,8 @@ const EducationNutrition = () => {
         </div>
       </div>
       <Footer />
+
+      <BottomNavbar />
     </div>
   );
 };

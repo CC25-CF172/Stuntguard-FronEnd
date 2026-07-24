@@ -212,6 +212,8 @@ const ChatbotPage = () => {
         </div>
       </div>
       <Footer />
+
+      <BottomNavbar />
     </>
   );
 };

@@ -621,6 +621,8 @@ const PredictionPage = () => {
         </div>
       </div>
       <Footer />
+
+      <BottomNavbar />
     </div>
   );
 };

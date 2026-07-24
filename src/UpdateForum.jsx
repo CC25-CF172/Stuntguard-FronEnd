@@ -103,6 +103,8 @@ const UpdateForumPage = () => {
         </div>
       </div>
       <Footer />
+
+      <BottomNavbar />
     </>
   );
 };

@@ -309,6 +309,8 @@ const ForumPage = () => {
         </div>
       </div>
       <Footer />
+
+      <BottomNavbar />
     </>
   );
 };

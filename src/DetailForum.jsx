@@ -344,6 +344,8 @@ const ForumDetail = () => {
         </div>
       </div>
       <Footer />
+
+      <BottomNavbar />
     </>
   );
 };

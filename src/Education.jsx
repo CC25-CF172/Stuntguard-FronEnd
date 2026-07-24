@@ -170,6 +170,8 @@ const EducationalResources = () => {
         
       </div>
       <Footer />
+
+      <BottomNavbar />
     </div>
   );
 };

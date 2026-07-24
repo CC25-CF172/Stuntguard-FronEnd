@@ -20,6 +20,7 @@ import UpdateForumPage from "./UpdateForum";
 import DetailForumPage from "./DetailForum";
 import EducationCommunityPage from "./EducationCommunity";
 import EducationRisetPage from "./EducationRiset";
+import BottomNavbar from "./pages/components/BottomNavbar";
 
 // =========================================================
 // CUSTOM HOOK: LOGOUT OTOMATIS GLOBAL (TANPA REDIRECT)
@@ -119,6 +120,9 @@ function App() {
         <Route path="/updateforum/:id" element={<UpdateForumPage />} />
         <Route path="/detailforum/:id" element={<DetailForumPage />} />
       </Routes>
+
+      <BottomNavbar />
+
     </Router>
   );
 }

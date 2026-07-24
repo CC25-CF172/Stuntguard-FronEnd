@@ -137,6 +137,8 @@ const NewForumPage = ({ onSuccess }) => {
         </div>
       </div>
       <Footer />
+
+      <BottomNavbar />
     </>
   );
 };

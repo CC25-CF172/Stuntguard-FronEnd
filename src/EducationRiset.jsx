@@ -62,6 +62,8 @@ const EducationRiset = () => {
         </div>
       </div>
       <Footer />
+
+      <BottomNavbar />
     </div>
   );
 };

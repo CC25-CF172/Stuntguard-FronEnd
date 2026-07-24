@@ -63,6 +63,8 @@ const EducationCommunity = () => {
         </div>
       </div>
       <Footer />
+
+      <BottomNavbar />
     </div>
   );
 };
