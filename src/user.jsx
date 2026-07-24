@@ -3,7 +3,6 @@ import Navbar from './pages/components/Navbar';
 import Footer from './pages/components/Footer';
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "./api";
-// Import Chart.js
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -28,10 +27,8 @@ export default function ChildGrowthDashboard() {
     currentStatus: "-",
   });
 
-  // Ref untuk chart export
   const chartRef = useRef();
 
-  // Scroll ke atas saat mount
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, []);
@@ -53,18 +50,21 @@ export default function ChildGrowthDashboard() {
       },
     })
       .then((res) => res.json())
-      .then((data) => {
-        const user = data.data ? data.data : data;
+      .then((resData) => {
+        // Ekstrak data profil dengan aman (mendukung respons berstruktur tunggal/nested)
+        const user = resData.data?.user || resData.data || resData;
+        const userId = user.id || user.user_id;
+
         setProfile({
-          name: user.name || "",
-          email: user.email || "",
-          id: user.id,
+          name: user.name || "Pengguna",
+          email: user.email || "-",
+          id: userId,
         });
         setLoading(false);
 
-        // 2. Fetch Riwayat Stunting Menggunakan Path Param /stunting/history/{user_id}
-        if (user.id) {
-          fetch(`${API_BASE_URL}/api/v1/stunting/history/${user.id}`, {
+        // 2. Fetch Riwayat Stunting Menggunakan userId yang tervalidasi
+        if (userId) {
+          fetch(`${API_BASE_URL}/api/v1/stunting/history/${userId}`, {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
@@ -73,24 +73,31 @@ export default function ChildGrowthDashboard() {
           })
             .then((res) => res.json())
             .then((result) => {
-              if (result.success && Array.isArray(result.data)) {
-                setHistory(result.data);
-                if (result.data.length > 0) {
-                  const sorted = [...result.data].sort(
-                    (a, b) => new Date(b.created_at) - new Date(a.created_at)
-                  );
-                  setStats({
-                    total: result.data.length,
-                    lastDate: new Date(sorted[0].created_at).toLocaleDateString("id-ID", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    }),
-                    currentStatus: sorted[0].risk_type || sorted[0].who_classification || "-",
-                  });
-                } else {
-                  setStats({ total: 0, lastDate: "-", currentStatus: "-" });
-                }
+              // Ambil array riwayat dari result.data atau result
+              const historyData = Array.isArray(result.data)
+                ? result.data
+                : Array.isArray(result)
+                ? result
+                : [];
+
+              if (historyData.length > 0) {
+                setHistory(historyData);
+                const sorted = [...historyData].sort(
+                  (a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt)
+                );
+                
+                const lastItem = sorted[0];
+                const statusVal = lastItem.risk_type || lastItem.who_classification || lastItem.status || lastItem.result || "-";
+                
+                setStats({
+                  total: historyData.length,
+                  lastDate: new Date(lastItem.created_at || lastItem.createdAt).toLocaleDateString("id-ID", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  }),
+                  currentStatus: statusVal,
+                });
               } else {
                 setHistory([]);
                 setStats({ total: 0, lastDate: "-", currentStatus: "-" });
@@ -111,22 +118,27 @@ export default function ChildGrowthDashboard() {
   }, []);
 
   const statusBadge = (status) => {
-    if (!status) return <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">-</span>;
-    const s = status.toLowerCase();
-    if (s === "normal") return <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">Normal</span>;
-    if (s === "ringan") return <span className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full text-xs">Ringan</span>;
-    if (s === "sedang") return <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs">Sedang</span>;
-    if (s === "berat") return <span className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs">Berat</span>;
-    return <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">{status}</span>;
+    if (!status) return <span className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-xs">-</span>;
+    const s = String(status).toLowerCase();
+    if (s.includes("normal") || s.includes("rendah") || s.includes("low")) 
+      return <span className="bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-medium">Normal</span>;
+    if (s.includes("ringan") || s.includes("stunted")) 
+      return <span className="bg-yellow-100 text-yellow-700 px-2.5 py-1 rounded-full text-xs font-medium">Ringan</span>;
+    if (s.includes("sedang")) 
+      return <span className="bg-orange-100 text-orange-700 px-2.5 py-1 rounded-full text-xs font-medium">Sedang</span>;
+    if (s.includes("berat") || s.includes("severely")) 
+      return <span className="bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-medium">Berat</span>;
+    return <span className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-xs font-medium">{status}</span>;
   };
 
-  // Sort history berdasarkan usia untuk kelancaran garis chart
-  const sortedHistory = [...history].sort((a, b) => a.age_months - b.age_months);
+  // Helper fleksibel untuk membaca Usia & Tinggi
+  const getAgeValue = (item) => item.age_months ?? item.age ?? item.usia ?? 0;
+  const getHeightValue = (item) => item.current_length_cm || item.height_cm || item.height || item.tinggi || 0;
 
-  // Helper untuk membaca nilai tinggi badan dari berbagai key API
-  const getHeightValue = (item) => item.current_length_cm || item.height_cm || item.height || 0;
+  // Sort history berdasarkan usia
+  const sortedHistory = [...history].sort((a, b) => getAgeValue(a) - getAgeValue(b));
 
-  // Filter Gender secara fleksibel (male/female, Laki-laki/Perempuan)
+  // Filter Gender
   const maleHistory = sortedHistory.filter(
     (item) =>
       (item.gender?.toLowerCase() === "male" ||
@@ -143,15 +155,14 @@ export default function ChildGrowthDashboard() {
       getHeightValue(item) > 0
   );
 
-  // Gabungkan semua usia unik untuk sumbu X (Label Usia)
+  // Gabungkan semua usia unik
   const allAges = Array.from(
-    new Set([...maleHistory, ...femaleHistory].map((item) => item.age_months))
+    new Set(sortedHistory.map((item) => getAgeValue(item)))
   ).sort((a, b) => a - b);
 
-  // Helper mapping nilai data tinggi badan
   const getDataByAge = (historyArr, ages) =>
     ages.map((age) => {
-      const found = historyArr.find((item) => item.age_months === age);
+      const found = historyArr.find((item) => getAgeValue(item) === age);
       return found ? getHeightValue(found) : null;
     });
 
@@ -167,7 +178,6 @@ export default function ChildGrowthDashboard() {
       pointBackgroundColor: "#2563eb",
       pointBorderColor: "#fff",
       pointRadius: 6,
-      pointHoverRadius: 8,
       borderWidth: 3,
       tension: 0.3,
       spanGaps: true,
@@ -184,7 +194,23 @@ export default function ChildGrowthDashboard() {
       pointBackgroundColor: "#22c55e",
       pointBorderColor: "#fff",
       pointRadius: 6,
-      pointHoverRadius: 8,
+      borderWidth: 3,
+      tension: 0.3,
+      spanGaps: true,
+    });
+  }
+
+  // Jika tidak terpisah berdasarkan gender (general)
+  if (datasets.length === 0 && sortedHistory.length > 0) {
+    datasets.push({
+      label: "Tinggi Badan (cm)",
+      data: sortedHistory.map((item) => getHeightValue(item)),
+      fill: false,
+      borderColor: "#0284c7",
+      backgroundColor: "#38bdf8",
+      pointBackgroundColor: "#0284c7",
+      pointBorderColor: "#fff",
+      pointRadius: 6,
       borderWidth: 3,
       tension: 0.3,
       spanGaps: true,
@@ -205,11 +231,10 @@ export default function ChildGrowthDashboard() {
     },
     scales: {
       x: { title: { display: true, text: "Usia (bulan)" } },
-      y: { title: { display: true, text: "Tinggi Badan (cm)" }, beginAtZero: true },
+      y: { title: { display: true, text: "Tinggi Badan (cm)" }, beginAtZero: false },
     },
   };
 
-  // Fungsi download chart
   const handleDownloadChart = () => {
     try {
       const chartInstance = chartRef.current;
@@ -336,19 +361,19 @@ export default function ChildGrowthDashboard() {
                 </tr>
               ) : (
                 [...history]
-                  .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                  .sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt))
                   .map((item, idx) => (
                     <tr className="border-b hover:bg-gray-50" key={item.id || idx}>
                       <td className="py-3 px-3 font-medium">
-                        {new Date(item.created_at).toLocaleDateString("id-ID", {
+                        {new Date(item.created_at || item.createdAt || Date.now()).toLocaleDateString("id-ID", {
                           year: "numeric",
                           month: "short",
                           day: "numeric",
                         })}
                       </td>
-                      <td className="py-3 px-3">{item.age_months} bln</td>
+                      <td className="py-3 px-3">{getAgeValue(item)} bln</td>
                       <td className="py-3 px-3 capitalize">{item.gender || "-"}</td>
-                      <td className="py-3 px-3">{statusBadge(item.risk_type || item.who_classification)}</td>
+                      <td className="py-3 px-3">{statusBadge(item.risk_type || item.who_classification || item.status || item.result)}</td>
                     </tr>
                   ))
               )}
