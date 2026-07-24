@@ -16,7 +16,7 @@ import {
 
 ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend);
 
-export default function ChildGrowthDashboard() {
+export default function User() {
   const [profile, setProfile] = useState({ name: "", email: "", id: null });
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState([]);
@@ -29,6 +29,7 @@ export default function ChildGrowthDashboard() {
 
   const chartRef = useRef();
 
+  // Scroll ke atas saat komponen dimuat
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, []);
@@ -46,68 +47,77 @@ export default function ChildGrowthDashboard() {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
     })
       .then((res) => res.json())
       .then((resData) => {
-        // Ekstrak data profil dengan aman (mendukung respons berstruktur tunggal/nested)
-        const user = resData.data?.user || resData.data || resData;
-        const userId = user.id || user.user_id;
+        // Ambil objek user dari response API
+        const userObj = resData.data || resData;
+        const rawId = userObj.id || userObj.user_id;
+        
+        // Konversi ID ke tipe number sesuai dokumentasi API
+        const userId = rawId ? Number(rawId) : null;
 
         setProfile({
-          name: user.name || "Pengguna",
-          email: user.email || "-",
+          name: userObj.name || "Pengguna",
+          email: userObj.email || "-",
           id: userId,
         });
         setLoading(false);
 
-        // 2. Fetch Riwayat Stunting Menggunakan userId yang tervalidasi
-        if (userId) {
+        // 2. Fetch Riwayat Stunting jika userId berupa Number yang valid
+        if (userId && !isNaN(userId)) {
           fetch(`${API_BASE_URL}/api/v1/stunting/history/${userId}`, {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`,
+              Authorization: `Bearer ${token}`,
             },
           })
-            .then((res) => res.json())
+            .then(async (res) => {
+              const result = await res.json();
+              if (!res.ok) {
+                console.error("Gagal mengambil riwayat stunting:", result);
+                throw new Error(result.message || "Bad Request");
+              }
+              return result;
+            })
             .then((result) => {
-              // Ambil array riwayat dari result.data atau result
-              const historyData = Array.isArray(result.data)
-                ? result.data
-                : Array.isArray(result)
-                ? result
-                : [];
+              if (result.success && Array.isArray(result.data)) {
+                setHistory(result.data);
 
-              if (historyData.length > 0) {
-                setHistory(historyData);
-                const sorted = [...historyData].sort(
-                  (a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt)
-                );
-                
-                const lastItem = sorted[0];
-                const statusVal = lastItem.risk_type || lastItem.who_classification || lastItem.status || lastItem.result || "-";
-                
-                setStats({
-                  total: historyData.length,
-                  lastDate: new Date(lastItem.created_at || lastItem.createdAt).toLocaleDateString("id-ID", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  }),
-                  currentStatus: statusVal,
-                });
+                if (result.data.length > 0) {
+                  // Urutkan berdasarkan tanggal terbaru
+                  const sorted = [...result.data].sort(
+                    (a, b) => new Date(b.created_at) - new Date(a.created_at)
+                  );
+                  const lastItem = sorted[0];
+
+                  setStats({
+                    total: result.data.length,
+                    lastDate: new Date(lastItem.created_at).toLocaleDateString("id-ID", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    }),
+                    currentStatus: lastItem.risk_type || lastItem.who_classification || "-",
+                  });
+                } else {
+                  setStats({ total: 0, lastDate: "-", currentStatus: "-" });
+                }
               } else {
                 setHistory([]);
                 setStats({ total: 0, lastDate: "-", currentStatus: "-" });
               }
             })
             .catch((err) => {
-              console.error("Gagal mengambil riwayat:", err);
+              console.error("Error pada stunting history:", err);
               setHistory([]);
               setStats({ total: 0, lastDate: "-", currentStatus: "-" });
             });
+        } else {
+          console.warn("User ID tidak valid, pemanggilan /stunting/history dilewati.");
         }
       })
       .catch((err) => {
@@ -117,28 +127,25 @@ export default function ChildGrowthDashboard() {
       });
   }, []);
 
+  // Badge Status untuk tabel & statistik
   const statusBadge = (status) => {
     if (!status) return <span className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-xs">-</span>;
     const s = String(status).toLowerCase();
-    if (s.includes("normal") || s.includes("rendah") || s.includes("low")) 
-      return <span className="bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-medium">Normal</span>;
-    if (s.includes("ringan") || s.includes("stunted")) 
-      return <span className="bg-yellow-100 text-yellow-700 px-2.5 py-1 rounded-full text-xs font-medium">Ringan</span>;
-    if (s.includes("sedang")) 
-      return <span className="bg-orange-100 text-orange-700 px-2.5 py-1 rounded-full text-xs font-medium">Sedang</span>;
-    if (s.includes("berat") || s.includes("severely")) 
-      return <span className="bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-medium">Berat</span>;
+    if (s === "normal") return <span className="bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-medium">Normal</span>;
+    if (s === "ringan" || s === "stunted") return <span className="bg-yellow-100 text-yellow-700 px-2.5 py-1 rounded-full text-xs font-medium">Ringan</span>;
+    if (s === "sedang") return <span className="bg-orange-100 text-orange-700 px-2.5 py-1 rounded-full text-xs font-medium">Sedang</span>;
+    if (s === "berat" || s === "severely stunted") return <span className="bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-medium">Berat</span>;
     return <span className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-xs font-medium">{status}</span>;
   };
 
-  // Helper fleksibel untuk membaca Usia & Tinggi
-  const getAgeValue = (item) => item.age_months ?? item.age ?? item.usia ?? 0;
-  const getHeightValue = (item) => item.current_length_cm || item.height_cm || item.height || item.tinggi || 0;
+  // Helper membaca tinggi & usia sesuai skema JSON API
+  const getHeightValue = (item) => item.current_length_cm || item.height_cm || item.height || 0;
+  const getAgeValue = (item) => item.age_months ?? item.age ?? 0;
 
-  // Sort history berdasarkan usia
+  // Urutkan riwayat dari usia terkecil ke terbesar untuk kurva grafik
   const sortedHistory = [...history].sort((a, b) => getAgeValue(a) - getAgeValue(b));
 
-  // Filter Gender
+  // Filter Gender Laki-laki & Perempuan
   const maleHistory = sortedHistory.filter(
     (item) =>
       (item.gender?.toLowerCase() === "male" ||
@@ -155,7 +162,7 @@ export default function ChildGrowthDashboard() {
       getHeightValue(item) > 0
   );
 
-  // Gabungkan semua usia unik
+  // Ambil semua usia unik untuk label sumbu X
   const allAges = Array.from(
     new Set(sortedHistory.map((item) => getAgeValue(item)))
   ).sort((a, b) => a - b);
@@ -200,7 +207,7 @@ export default function ChildGrowthDashboard() {
     });
   }
 
-  // Jika tidak terpisah berdasarkan gender (general)
+  // Fallback jika gender tidak terinci
   if (datasets.length === 0 && sortedHistory.length > 0) {
     datasets.push({
       label: "Tinggi Badan (cm)",
@@ -361,11 +368,11 @@ export default function ChildGrowthDashboard() {
                 </tr>
               ) : (
                 [...history]
-                  .sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt))
+                  .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
                   .map((item, idx) => (
                     <tr className="border-b hover:bg-gray-50" key={item.id || idx}>
                       <td className="py-3 px-3 font-medium">
-                        {new Date(item.created_at || item.createdAt || Date.now()).toLocaleDateString("id-ID", {
+                        {new Date(item.created_at).toLocaleDateString("id-ID", {
                           year: "numeric",
                           month: "short",
                           day: "numeric",
@@ -373,7 +380,7 @@ export default function ChildGrowthDashboard() {
                       </td>
                       <td className="py-3 px-3">{getAgeValue(item)} bln</td>
                       <td className="py-3 px-3 capitalize">{item.gender || "-"}</td>
-                      <td className="py-3 px-3">{statusBadge(item.risk_type || item.who_classification || item.status || item.result)}</td>
+                      <td className="py-3 px-3">{statusBadge(item.risk_type || item.who_classification)}</td>
                     </tr>
                   ))
               )}
