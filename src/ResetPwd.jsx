@@ -61,6 +61,29 @@ const ResetPasswordInput = () => {
     
     <div className="min-h-screen flex items-center justify-center bg-blue-50 px-4">
       <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center">
+
+        {/* Tombol Back ke Home */}
+        <button
+          type="button"
+          onClick={() => navigate("/")}
+          className="absolute top-6 left-6 text-gray-500 hover:text-[#0284c7] hover:bg-blue-50 p-1.5 rounded-full transition-colors duration-200"
+          title="Kembali ke Home"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+            />
+          </svg>
+        </button>
         <h2 className="text-2xl font-bold mb-4 text-blue-600">Reset Password Baru</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
