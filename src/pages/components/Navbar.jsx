@@ -121,6 +121,15 @@ const Navbar = () => {
     return "Profile";
   };
 
+  const Navbar = () => {
+  return (
+    // Tambahkan 'hidden md:flex' pada wrapper paling luar
+    <nav className="hidden md:flex items-center justify-between px-8 py-4 bg-white shadow-sm w-full">
+      {/* ... isi Navbar lama kamu tetap sama ... */}
+    </nav>
+  );
+};
+
   return (
     <nav className="bg-[#FAFCFE] text-[#222F3E] shadow sticky top-0 z-50 border-t-4 border-[#222F3E]">
       <div className="max-w-7xl mx-auto flex justify-between items-center px-4 md:px-8 py-0 min-h-[56px]">
