@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, MessageSquare, Scan, Bot, User, UserPlus } from "lucide-react";
+import { Home, MessageSquare, Scan, Bot, User, LogIn } from "lucide-react";
 
 const BottomNavbar = () => {
   const navigate = useNavigate();
@@ -13,7 +13,7 @@ const BottomNavbar = () => {
     return null;
   }
 
-  // Cek status login
+  // Cek status login dari localStorage
   useEffect(() => {
     const checkAuthStatus = () => {
       const token = localStorage.getItem("token");
@@ -23,7 +23,7 @@ const BottomNavbar = () => {
 
     checkAuthStatus();
 
-    // Listener jika ada perubahan status login (multi-tab / session update)
+    // Listener agar UI langsung terbarui jika login/logout di tab lain atau proses app
     window.addEventListener("storage", checkAuthStatus);
     return () => window.removeEventListener("storage", checkAuthStatus);
   }, [location.pathname]);
@@ -57,7 +57,7 @@ const BottomNavbar = () => {
           <span className="text-[10px] font-medium mt-1">Forum</span>
         </button>
 
-        {/* 3. Button Tengah Melayang (Asesmen / Prediction) */}
+        {/* 3. Button Tengah Melayang (Asesmen) */}
         <div className="relative -top-6 px-1 flex items-center justify-center">
           <button
             onClick={() => navigate("/prediction")}
@@ -79,8 +79,9 @@ const BottomNavbar = () => {
           <span className="text-[10px] font-medium mt-1">AI Chat</span>
         </button>
 
-        {/* 5. Profil (Sudah Login) ATAU Register (Belum Login) */}
+        {/* 5. DUA KONDISI: TAMPILAN PROFIL (JIKA SUDAH LOGIN) vs TOMBOL LOGIN BIRU (BELUM LOGIN) */}
         {isLoggedIn ? (
+          /* Tampilan Awal: Ikon Profil Biasa */
           <button
             onClick={() => navigate("/user")}
             className={`flex-1 flex flex-col items-center justify-center py-1 transition-colors ${
@@ -93,15 +94,16 @@ const BottomNavbar = () => {
             <span className="text-[10px] font-medium mt-1">Profil</span>
           </button>
         ) : (
-          <button
-            onClick={() => navigate("/register")}
-            className={`flex-1 flex flex-col items-center justify-center py-1 transition-colors ${
-              isActive("/register") ? "text-[#0284c7]" : "text-gray-400"
-            }`}
-          >
-            <UserPlus className="w-5 h-5 stroke-[2.2]" />
-            <span className="text-[10px] font-medium mt-1">Daftar</span>
-          </button>
+          /* Tampilan Belum Login: Tombol Login Biru Menonjol */
+          <div className="flex-1 flex items-center justify-center">
+            <button
+              onClick={() => navigate("/login")}
+              className="bg-[#0284c7] hover:bg-[#0369a1] text-white px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 shadow-sm active:scale-95 transition-all"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Login</span>
+            </button>
+          </div>
         )}
 
       </div>
