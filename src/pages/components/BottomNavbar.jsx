@@ -7,7 +7,7 @@ const BottomNavbar = () => {
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // 1. Jalankan useEffect TERLEBIH DAHULU di tingkat teratas
+  // 1. Hook dijalankan paling atas (mencegah error React Rules of Hooks)
   useEffect(() => {
     const checkAuthStatus = () => {
       const token = localStorage.getItem("token");
@@ -21,7 +21,7 @@ const BottomNavbar = () => {
     return () => window.removeEventListener("storage", checkAuthStatus);
   }, [location.pathname]);
 
-  // 2. KONDISI RETURN BARU DITAROH DI SINI (setelah semua Hooks selesai dipanggil)
+  // 2. Early return ditaruh setelah Hook
   const hiddenRoutes = ["/login", "/register", "/forgotpwd", "/reset-password"];
   if (hiddenRoutes.includes(location.pathname)) {
     return null;
@@ -56,7 +56,7 @@ const BottomNavbar = () => {
           <span className="text-[10px] font-medium mt-1">Forum</span>
         </button>
 
-        {/* 3. Button Tengah Melayang (Asesmen) */}
+        {/* 3. Floating Button Tengah (Asesmen) */}
         <div className="relative -top-6 px-1 flex items-center justify-center">
           <button
             onClick={() => navigate("/prediction")}
@@ -78,8 +78,9 @@ const BottomNavbar = () => {
           <span className="text-[10px] font-medium mt-1">AI Chat</span>
         </button>
 
-        {/* 5. Tombol Profil / Login Biru */}
+        {/* 5. TAMPILAN PROFIL (JIKA SUDAH LOGIN) vs TOMBOL LOGIN BULAT ELEGANT (BELUM LOGIN) */}
         {isLoggedIn ? (
+          /* Tampilan Sudah Login */
           <button
             onClick={() => navigate("/user")}
             className={`flex-1 flex flex-col items-center justify-center py-1 transition-colors ${
@@ -92,14 +93,16 @@ const BottomNavbar = () => {
             <span className="text-[10px] font-medium mt-1">Profil</span>
           </button>
         ) : (
-          <div className="flex-1 flex items-center justify-center">
+          /* Tampilan Belum Login: Tombol Bulat Modern */
+          <div className="flex-1 flex flex-col items-center justify-center">
             <button
               onClick={() => navigate("/login")}
-              className="bg-[#0284c7] hover:bg-[#0369a1] text-white px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 shadow-sm active:scale-95 transition-all"
+              className="w-9 h-9 bg-gradient-to-tr from-[#0284c7] to-[#38bdf8] text-white rounded-full flex items-center justify-center shadow-md shadow-sky-200 active:scale-90 transition-all border border-sky-100"
+              aria-label="Masuk ke Akun"
             >
-              <LogIn className="w-3.5 h-3.5" />
-              <span>Login</span>
+              <LogIn className="w-4 h-4 ml-0.5 stroke-[2.5]" />
             </button>
+            <span className="text-[10px] font-semibold text-[#0284c7] mt-0.5">Login</span>
           </div>
         )}
 
