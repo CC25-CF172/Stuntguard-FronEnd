@@ -1,49 +1,64 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, MessageSquare, Scan, Bot, User } from "lucide-react";
+import { Home, MessageSquare, Scan, Bot, User, UserPlus } from "lucide-react";
 
 const BottomNavbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Daftar halaman di mana Bottom Navbar TIDAK perlu muncul (misal: Login, Register, Lupa Password)
+  // Sembunyikan Bottom Navbar di halaman auth
   const hiddenRoutes = ["/login", "/register", "/forgotpwd", "/reset-password"];
   if (hiddenRoutes.includes(location.pathname)) {
     return null;
   }
 
-  // Helper untuk mengecek menu aktif
+  // Cek status login
+  useEffect(() => {
+    const checkAuthStatus = () => {
+      const token = localStorage.getItem("token");
+      const loggedIn = localStorage.getItem("isLoggedIn") === "true";
+      setIsLoggedIn(!!(token && loggedIn));
+    };
+
+    checkAuthStatus();
+
+    // Listener jika ada perubahan status login (multi-tab / session update)
+    window.addEventListener("storage", checkAuthStatus);
+    return () => window.removeEventListener("storage", checkAuthStatus);
+  }, [location.pathname]);
+
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden pb-3 px-4 bg-transparent pointer-events-none">
-      {/* Bar Container */}
-      <div className="relative bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.08)] rounded-3xl px-3 py-2 flex items-center justify-between pointer-events-auto border border-gray-100">
+    <div className="fixed bottom-0 left-0 right-0 z-[9999] block md:hidden pb-2 px-3 bg-transparent">
+      {/* Container Bar */}
+      <div className="relative bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.12)] rounded-2xl px-2 py-2 flex items-center justify-between border border-gray-100">
         
-        {/* Menu Kiri 1: Home */}
+        {/* 1. Beranda */}
         <button
           onClick={() => navigate("/")}
           className={`flex-1 flex flex-col items-center justify-center py-1 transition-colors ${
-            isActive("/") ? "text-[#0284c7]" : "text-gray-400 hover:text-gray-600"
+            isActive("/") ? "text-[#0284c7]" : "text-gray-400"
           }`}
         >
           <Home className="w-5 h-5 stroke-[2.2]" />
           <span className="text-[10px] font-medium mt-1">Beranda</span>
         </button>
 
-        {/* Menu Kiri 2: Forum */}
+        {/* 2. Forum */}
         <button
           onClick={() => navigate("/forum")}
           className={`flex-1 flex flex-col items-center justify-center py-1 transition-colors ${
-            isActive("/forum") ? "text-[#0284c7]" : "text-gray-400 hover:text-gray-600"
+            isActive("/forum") ? "text-[#0284c7]" : "text-gray-400"
           }`}
         >
           <MessageSquare className="w-5 h-5 stroke-[2.2]" />
           <span className="text-[10px] font-medium mt-1">Forum</span>
         </button>
 
-        {/* Floating Button Tengah: Prediction / Asesmen */}
-        <div className="relative -top-6 px-2 flex items-center justify-center">
+        {/* 3. Button Tengah Melayang (Asesmen / Prediction) */}
+        <div className="relative -top-6 px-1 flex items-center justify-center">
           <button
             onClick={() => navigate("/prediction")}
             className="w-14 h-14 bg-[#38bdf8] text-white rounded-full flex items-center justify-center shadow-lg shadow-sky-200 border-4 border-white active:scale-95 transition-all"
@@ -53,27 +68,41 @@ const BottomNavbar = () => {
           </button>
         </div>
 
-        {/* Menu Kanan 1: ChatBot */}
+        {/* 4. AI Chat */}
         <button
           onClick={() => navigate("/chatbot")}
           className={`flex-1 flex flex-col items-center justify-center py-1 transition-colors ${
-            isActive("/chatbot") ? "text-[#0284c7]" : "text-gray-400 hover:text-gray-600"
+            isActive("/chatbot") ? "text-[#0284c7]" : "text-gray-400"
           }`}
         >
           <Bot className="w-5 h-5 stroke-[2.2]" />
           <span className="text-[10px] font-medium mt-1">AI Chat</span>
         </button>
 
-        {/* Menu Kanan 2: User Profile */}
-        <button
-          onClick={() => navigate("/user")}
-          className={`flex-1 flex flex-col items-center justify-center py-1 transition-colors ${
-            isActive("/user") || isActive("/editprofile") ? "text-[#0284c7]" : "text-gray-400 hover:text-gray-600"
-          }`}
-        >
-          <User className="w-5 h-5 stroke-[2.2]" />
-          <span className="text-[10px] font-medium mt-1">Profil</span>
-        </button>
+        {/* 5. Profil (Sudah Login) ATAU Register (Belum Login) */}
+        {isLoggedIn ? (
+          <button
+            onClick={() => navigate("/user")}
+            className={`flex-1 flex flex-col items-center justify-center py-1 transition-colors ${
+              isActive("/user") || isActive("/editprofile")
+                ? "text-[#0284c7]"
+                : "text-gray-400"
+            }`}
+          >
+            <User className="w-5 h-5 stroke-[2.2]" />
+            <span className="text-[10px] font-medium mt-1">Profil</span>
+          </button>
+        ) : (
+          <button
+            onClick={() => navigate("/register")}
+            className={`flex-1 flex flex-col items-center justify-center py-1 transition-colors ${
+              isActive("/register") ? "text-[#0284c7]" : "text-gray-400"
+            }`}
+          >
+            <UserPlus className="w-5 h-5 stroke-[2.2]" />
+            <span className="text-[10px] font-medium mt-1">Daftar</span>
+          </button>
+        )}
 
       </div>
     </div>
