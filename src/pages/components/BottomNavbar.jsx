@@ -7,13 +7,7 @@ const BottomNavbar = () => {
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Sembunyikan Bottom Navbar di halaman auth
-  const hiddenRoutes = ["/login", "/register", "/forgotpwd", "/reset-password"];
-  if (hiddenRoutes.includes(location.pathname)) {
-    return null;
-  }
-
-  // Cek status login dari localStorage
+  // 1. Jalankan useEffect TERLEBIH DAHULU di tingkat teratas
   useEffect(() => {
     const checkAuthStatus = () => {
       const token = localStorage.getItem("token");
@@ -23,10 +17,15 @@ const BottomNavbar = () => {
 
     checkAuthStatus();
 
-    // Listener agar UI langsung terbarui jika login/logout di tab lain atau proses app
     window.addEventListener("storage", checkAuthStatus);
     return () => window.removeEventListener("storage", checkAuthStatus);
   }, [location.pathname]);
+
+  // 2. KONDISI RETURN BARU DITAROH DI SINI (setelah semua Hooks selesai dipanggil)
+  const hiddenRoutes = ["/login", "/register", "/forgotpwd", "/reset-password"];
+  if (hiddenRoutes.includes(location.pathname)) {
+    return null;
+  }
 
   const isActive = (path) => location.pathname === path;
 
@@ -79,9 +78,8 @@ const BottomNavbar = () => {
           <span className="text-[10px] font-medium mt-1">AI Chat</span>
         </button>
 
-        {/* 5. DUA KONDISI: TAMPILAN PROFIL (JIKA SUDAH LOGIN) vs TOMBOL LOGIN BIRU (BELUM LOGIN) */}
+        {/* 5. Tombol Profil / Login Biru */}
         {isLoggedIn ? (
-          /* Tampilan Awal: Ikon Profil Biasa */
           <button
             onClick={() => navigate("/user")}
             className={`flex-1 flex flex-col items-center justify-center py-1 transition-colors ${
@@ -94,7 +92,6 @@ const BottomNavbar = () => {
             <span className="text-[10px] font-medium mt-1">Profil</span>
           </button>
         ) : (
-          /* Tampilan Belum Login: Tombol Login Biru Menonjol */
           <div className="flex-1 flex items-center justify-center">
             <button
               onClick={() => navigate("/login")}
