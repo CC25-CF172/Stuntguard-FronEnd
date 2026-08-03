@@ -164,9 +164,9 @@ export default function StuntWatchLogin() {
         {/* Header */}
         <div className="text-center">
           <h1 className="text-3xl font-bold text-[#0284c7] mb-2">StuntGuard</h1>
-          <p className="text-gray-600 text-sm mb-8">Helping monitor child growth and prevent stunting</p>
-          <h2 className="text-2xl font-semibold text-gray-900 mb-2">Welcome Back</h2>
-          <p className="text-gray-600 text-sm">Log in to access your StuntGuard account</p>
+          <p className="text-gray-600 text-sm mb-8">Membantu memantau pertumbuhan anak dan mencegah stunting</p>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-2">Selamat Datang</h2>
+          <p className="text-gray-600 text-sm">Masuk Untuk Melakukan Pemeriksaan Stunting</p>
         </div>
 
         {/* Error and Success Messages */}
@@ -252,7 +252,7 @@ export default function StuntWatchLogin() {
               onChange={(e) => setRememberMe(e.target.checked)}
             />
             <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-              Remember me
+              Ingat Saya
             </label>
           </div>
 
@@ -276,7 +276,7 @@ export default function StuntWatchLogin() {
                 <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-gray-50 text-gray-500">Or continue with</span>
+                <span className="px-2 bg-gray-50 text-gray-500">Atau Masuk Dengan</span>
               </div>
             </div>
           </div>
@@ -289,10 +289,10 @@ export default function StuntWatchLogin() {
           {/* Register Link */}
           <div className="text-center">
             <p className="text-sm text-gray-600">
-              Don't have an account?{' '}
+              Belum Punya Akun?{' '}
               <a href="#" className="font-medium text-[#0284c7] hover:text-blue-500"
                 onClick={() => navigate("/register")}>
-                Register
+                Daftar
               </a>
             </p>
           </div>
