@@ -33,14 +33,14 @@ const Footer = () => {
 
         {/* Quick Links */}
         <div>
-          <h4 className="font-semibold text-gray-800 mb-4 text-sm uppercase tracking-wide">QUICK LINKS</h4>
+          <h4 className="font-semibold text-gray-800 mb-4 text-sm uppercase tracking-wide">Aksi Cepat</h4>
           <ul className="space-y-3">
             <li>
               <Link
                 to="/"
                 className="text-gray-600 hover:text-blue-500 text-sm transition-colors"
               >
-                Home
+                Beranda
               </Link>
             </li>
             <li>
@@ -48,7 +48,7 @@ const Footer = () => {
                 to="/prediction"
                 className="text-gray-600 hover:text-blue-500 text-sm transition-colors"
               >
-                Prediction
+                Prediksi
               </Link>
             </li>
             <li>
@@ -56,7 +56,7 @@ const Footer = () => {
                 to="/education"
                 className="text-gray-600 hover:text-blue-500 text-sm transition-colors"
               >
-                Education
+                Edukasi
               </Link>
             </li>
             <li>
