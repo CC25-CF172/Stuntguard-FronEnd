@@ -166,7 +166,7 @@ export default function StuntWatchLogin() {
           <h1 className="text-3xl font-bold text-[#0284c7] mb-2">StuntGuard</h1>
           <p className="text-gray-600 text-sm mb-8">Helping monitor child growth and prevent stunting</p>
           <h2 className="text-2xl font-semibold text-gray-900 mb-2">Welcome Back</h2>
-          <p className="text-gray-600 text-sm">Log in to access your StuntWatch account</p>
+          <p className="text-gray-600 text-sm">Log in to access your StuntGuard account</p>
         </div>
 
         {/* Error and Success Messages */}
