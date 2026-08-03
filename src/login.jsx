@@ -237,7 +237,7 @@ export default function StuntWatchLogin() {
                   </button>
                 </div>
               </div>
-                  <Link to="/forgotpwd" className="text-sm text-blue-600 hover:text-blue-500 mt-1 block">Forgot Password</Link>
+                  <Link to="/forgotpwd" className="text-sm text-blue-600 hover:text-blue-500 mt-1 block">Lupa Password</Link>
             </div>
           </div>
 
