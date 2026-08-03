@@ -89,8 +89,8 @@ const Navbar = () => {
 
   const navLinks = [
     { to: "/", label: "Home" },
-    { to: "/prediction", label: "Prediction" },
-    { to: "/education", label: "Education" },
+    { to: "/prediction", label: "Prediksi" },
+    { to: "/education", label: "Edukasi" },
     { to: "/forum", label: "Forum" },
     { to: "/chatbot", label: "Chatbot" },
   ];
@@ -163,13 +163,13 @@ const Navbar = () => {
                 to="/login"
                 className="px-4 py-2 text-blue-600 border border-blue-600 rounded-full text-sm hover:bg-blue-50 transition-colors"
               >
-                Login
+                Masuk
               </Link>
               <Link
                 to="/register"
                 className="px-4 py-2 bg-blue-600 text-white rounded-full text-sm hover:bg-blue-700 transition-colors"
               >
-                Register
+                Daftar
               </Link>
             </div>
           ) : (
@@ -208,7 +208,7 @@ const Navbar = () => {
                     onClick={() => setIsDropdownOpen(false)}
                   >
                     <FaUserCircle className="text-[#0284c7]" />
-                    Your Profile
+                    Profil Kamu
                   </Link>
 
                   <Link
@@ -228,7 +228,7 @@ const Navbar = () => {
                       <circle cx="12" cy="12" r="3" />
                       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
                     </svg>
-                    Settings
+                    Pengaturan
                   </Link>
 
                   <div className="border-t border-gray-100 mt-1 pt-1">
@@ -248,7 +248,7 @@ const Navbar = () => {
                         <polyline points="16,17 21,12 16,7" />
                         <line x1="21" y1="12" x2="9" y2="12" />
                       </svg>
-                      Sign out
+                      Keluar
                     </button>
                   </div>
                 </div>
