@@ -88,7 +88,7 @@ const Navbar = () => {
   }, []);
 
   const navLinks = [
-    { to: "/", label: "Home" },
+    { to: "/", label: "Beranda" },
     { to: "/prediction", label: "Prediksi" },
     { to: "/education", label: "Edukasi" },
     { to: "/forum", label: "Forum" },
