@@ -82,7 +82,7 @@ const Footer = () => {
 
         {/* Contact Us */}
         <div>
-          <h4 className="font-semibold text-gray-800 mb-4 text-sm uppercase tracking-wide">CONTACT US</h4>
+          <h4 className="font-semibold text-gray-800 mb-4 text-sm uppercase tracking-wide">Hubungi Kami</h4>
           <div className="space-y-3">
             <div className="flex items-start gap-3">
               <MapPin className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
