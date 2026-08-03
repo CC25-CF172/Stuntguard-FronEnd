@@ -171,9 +171,9 @@ export default function StuntWatchRegister() {
         {/* Header */}
         <div className="text-center">
           <h1 className="text-3xl font-bold text-[#0284c7] mb-2">StuntGuard</h1>
-          <p className="text-gray-600 text-sm mb-8">Helping monitor child growth and prevent stunting</p>
-          <h2 className="text-2xl font-semibold text-gray-900 mb-2">Create an Account</h2>
-          <p className="text-gray-600 text-sm">Join StuntGuard to monitor your child's growth</p>
+          <p className="text-gray-600 text-sm mb-8">Membantu memantau pertumbuhan anak dan mencegah stunting</p>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-2">Buat Akun</h2>
+          <p className="text-gray-600 text-sm">Bergabunglah dengan StuntGuard untuk memantau pertumbuhan anak Anda.</p>
         </div>
 
         {/* Registration Form */}
@@ -182,7 +182,7 @@ export default function StuntWatchRegister() {
             {/* Full Name Field */}
             <div>
               <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name
+                Nama Lengkap
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
