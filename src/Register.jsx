@@ -366,10 +366,10 @@ export default function StuntWatchRegister() {
           {/* Sign In Link */}
           <div className="text-center">
             <p className="text-sm text-gray-600">
-              Already have an account?{' '}
+              Sudah Punya Akun?{' '}
               <a href="#" className="font-medium text-[#0284c7] hover:text-blue-500"
                 onClick={() => navigate("/login")}>
-                Sign in
+                Masuk
               </a>
             </p>
           </div>
